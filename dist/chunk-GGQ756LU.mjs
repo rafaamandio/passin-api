@@ -1,20 +1,21 @@
-import { BadRequest } from './_errors/bad-request';
-import { prisma } from './../lib/prisma';
-import { ZodTypeProvider } from "fastify-type-provider-zod";
-import { FastifyInstance } from "fastify";
-import { z } from "zod";
+import {
+  BadRequest
+} from "./chunk-JRO4E4TH.mjs";
+import {
+  prisma
+} from "./chunk-JV6GRE7Y.mjs";
 
-export async function getAttendeesBadge(app: FastifyInstance) {
-  app
-    .withTypeProvider<ZodTypeProvider>()
-    .get(
+// src/routes/get-attendee-badge.ts
+import { z } from "zod";
+async function getAttendeesBadge(app) {
+  app.withTypeProvider().get(
     "/attendees/:attendeeId/badge",
     {
       schema: {
-        summary: 'Get an attendee badge',
-        tags: ['attendees'],
+        summary: "Get an attendee badge",
+        tags: ["attendees"],
         params: z.object({
-          attendeeId: z.coerce.number().int(),
+          attendeeId: z.coerce.number().int()
         }),
         response: {
           200: z.object({
@@ -26,43 +27,41 @@ export async function getAttendeesBadge(app: FastifyInstance) {
             })
           })
         }
-      },
+      }
     },
     async (req, res) => {
       const { attendeeId } = req.params;
-
       const attendee = await prisma.attendee.findUnique({
         select: {
           name: true,
           email: true,
           event: {
             select: {
-              title: true,
-            },
-          },
-        },        
+              title: true
+            }
+          }
+        },
         where: {
           id: attendeeId
         }
-      })
-
-
+      });
       if (attendee === null) {
-        throw new BadRequest('Attendee not found.')
+        throw new BadRequest("Attendee not found.");
       }
-
-      const baseURL = `${req.protocol}://${req.hostname}`
-
-      const checkInUrl = new URL(`/attendees/${attendeeId}/check-in`, baseURL)
-
+      const baseURL = `${req.protocol}://${req.hostname}`;
+      const checkInUrl = new URL(`/attendees/${attendeeId}/check-in`, baseURL);
       return res.send({
         badge: {
           name: attendee.name,
           email: attendee.email,
           eventTitle: attendee.event.title,
-          checkInUrl: checkInUrl.toString(),
+          checkInUrl: checkInUrl.toString()
         }
-      })
+      });
     }
   );
 }
+
+export {
+  getAttendeesBadge
+};
